@@ -34,3 +34,10 @@ def print_pairs_with_sum(array, target):
                 print(a, b)
 ```
 This is actually O((N^2)/2), but since we drop constants, it's still O(N^2).
+
+# Tips and Tricks
+- Don't ignore function runtimes
+- Use logical variable names, don't just toss around the N label
+- Add sequential steps, and multiply nested steps
+- Biggest factor wins (assuming they're talking about the same variable)
+
