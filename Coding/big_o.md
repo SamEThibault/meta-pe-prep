@@ -4,10 +4,10 @@
 - Defines both time complexity and space complexity with same notation
 
 O(1) - Constant time
-O(N) - Linear time
-O(N^2) - Quadratic time
 O(log N) - Logarithmic time
+O(N) - Linear time
 O(N log N) - Linearithmic time
+O(N^2) - Quadratic time
 O(2^N) - Exponential time
 O(N!) - Factorial time
 
@@ -40,4 +40,3 @@ This is actually O((N^2)/2), but since we drop constants, it's still O(N^2).
 - Use logical variable names, don't just toss around the N label
 - Add sequential steps, and multiply nested steps
 - Biggest factor wins (assuming they're talking about the same variable)
-
