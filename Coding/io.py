@@ -62,3 +62,14 @@ with open("data.csv", "r") as file:
     reader = csv.reader(file)
     for row in reader:
         print(row)
+
+# API stuff
+import requests
+response = requests.get("https://google.com")
+print(response.status_code)
+print(response.json())
+
+data = {"POST_DATA": 1}
+response = requests.post("https://httpbin.org/post", json=data)
+print(response.json())
+
