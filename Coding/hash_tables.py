@@ -25,3 +25,35 @@ d.popitem() # returns last inserted key-val pair
 d.setdefault("key", "value") # returns value of specified key, if key doesn't exist, insert the key with specified val
 d.update() # update dict with key-val pairs
 d.values() # returns list of values in dict
+
+# Ordered Dictionaries
+# LRU Cache example
+from collections import OrderedDict
+
+class LRUCache:
+
+    # just sets capacity
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+        return
+
+    def get(self, key: int) -> int:
+        # if it exists, move to end of dict, and return val
+        if key in self.cache:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        return -1
+
+    def put(self, key: int, value: int) -> None:
+        # if it exists, move to end of dict
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        else:
+            # it doesn't exist yet, check capacity
+            if len(self.cache) == self.capacity:
+                # if we're at capacity, pop LRU (front of dict)
+                self.cache.popitem(last=False)
+                
+        self.cache[key] = value
+
