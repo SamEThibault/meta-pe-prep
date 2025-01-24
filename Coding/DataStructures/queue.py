@@ -1,4 +1,4 @@
-# Stack implementation
+# Queue implementation
 
 class Queue:
 
