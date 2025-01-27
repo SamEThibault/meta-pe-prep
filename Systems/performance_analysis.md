@@ -12,7 +12,7 @@ This is an optimized approach to troubleshooting a server using basic Linux comm
     - free: Free memory in KB.
     - si, so: Swap-ins and swap-outs. If these are > 0, you are out of memory.
     - us, sy, id, wa, st: Breakdowns of CPU time, on average across all CPUs. us is user time, sy is system time, id is idle time, wa is wait time, and st is stolen time. The CPU time breakdown confirms if the CPUs are busy. A constant degree of wait I/O points to a disk bottleneck. 
-- `mpstat -P ALL 1`: Shows CPU time breakdowns per CPU core, which can be used to check for imbalances. A single hot CPU can be evidence of a single-threaded application.
+- `mpstat -P ALL 1`: (multiprocessor statistics) Shows CPU time breakdowns per CPU core, which can be used to check for imbalances. A single hot CPU can be evidence of a single-threaded application.
 - `pidstat 1`: Similar to top, but prints a rolling summary instead of clearing the screen. Can be useful for identifying patterns over time.
 - `iostat -xz 1`: Shows Disk stats. Look for:
     - r/s, w/s, rkB/s, wkB/s: These are the delivered reads, writes, read Kbytes, and write Kbytes per second to the device. A performance problem might simply be due to an excessive load applied.
@@ -31,3 +31,34 @@ This is an optimized approach to troubleshooting a server using basic Linux comm
     - retrans/s: number of TCP retransmits per second
     Active and passive counts are often useful as a rough measure of server load: number of new accepted connections, and number of downstream connections. Retransmits are a sign of a network or server issue, it may be an unreliable network, or it may just be an overloaded server dropping packets. 
 - `top`: Shows top processes by CPU usage, and many other metrics we previously mentionned. But it refreshes, so harder to find patterns.
+
+Summary:
+- Check CPU util: are we saturated? Is the kernel/user space hogging CPU resources?
+- Check memory: are we out of memory? Are we excessively swapping? 
+- Check disk: are we busy? Are we waiting on I/O?
+- Check network: are we sending/receiving a lot of data? Are we dropping packets?
+
+## More on Linux Performance Tools and Methodologies
+[https://netflixtechblog.com/netflix-at-velocity-2015-linux-performance-tools-51964ddb81cf](Source)
+![alt text](image.png)
+
+### Problem Statement Method
+- What makes you think there is a perf problem?
+- Has this system ever performed well?
+- What has changed recently? Software? Hardware? Load?
+- Can the perf degradation be expressed in terms of latency or run time?
+- Does the problem affect other people or apps, or is it just you?
+- What is the environment? (OS, kernel, hardware, etc.)
+
+### Workload Characterization Method
+- Who is casuing the load? (PID, UID, IP addr)
+- Why is the load called? (Code path, stack trace)
+- What is the load? (IOPS, tput, type, r/w)
+- How is the load changing over time? 
+
+# The USE Method
+- For every resource, check:
+    - Utilization: Is the resource busy?
+    - Saturation: Is the queue of work for the resource growing?
+    - Errors: Is the resource returning errors?
+
