@@ -95,3 +95,12 @@ Here is a list of technologies and methodologies that major companies use to bui
 2. Define problem scope: Ask what should be the focus? For this example: Finding and playing music
 3. Define use cases: browse music, search for song, play song
 4. Think about metrics: How many users? A billion. How many songs? 100 million. File size: assume about 5 MB per song. So around 500TB of total song data. With 3x replication, Around 1.5PB. Metadata: 100B per song ish, so 10GB total, not a factor.
+5. High level overview: Client application, Load balancer, replicated web servers, Database
+6. Outline the DB schemas: How many DBs? One for metadata (users, songs, artists...), One for song audio. Why split this into 2? We have static content: the song files. So use S3 for that. For metadata, use a relational DB. Schema for RDS: song_id, song_url, artist, genre, link to album cover, audio_link
+7. Drill down on use cases: 
+    - User searches for a song: goes through LB, to web server, to metadata DB, which returns a list of songs that match the query. That's pretty efficient. 
+    - User playes a song: goes through LB, to web server, to metadata DB, which returns song URL. Then web server has to fetch the song from S3 and stream it to the user. To stream, you need a web socket connection which allows constant communication between server and client. That might not be necessary: Just wait for the client to have entire song in memory before starting to play it. That eliminates possible lags.
+8. Think about bottlenecks:
+    - Inefficient streaming for songs with high volume of requests: can easily overload song bucket. Takes alot of bandwidth for the web servers as well. Solution: CDNs as song audio caches. Relieves load on S3 and web servers.
+    - Caching metadata: Use Redis to cache metadata. Relieves load on the RDS DB and ensures that popular requests are efficiently served.
+    - Think about cache on the server level: Maybe a distributed cache, like Memcached, to cache song URLs and relieve load on the DBs. Maybe load entire songs on the web servers to avoid streaming from S3. (Multi-layer caching)
