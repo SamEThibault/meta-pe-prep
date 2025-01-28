@@ -86,3 +86,5 @@ Here is a list of technologies and methodologies that major companies use to bui
 - Application nodes should be stateless to simplify consistency and load balancing.
 - Object storage (S3) should be used for images and other static files.
 - Large tasks should be queued, with workers processing them asynchronously to avoid app response bottlenecks.
+- For notification purposes, web sockets should be used. They allow for bi-directional communication between the server and client.
+- Sharding: Splitting data across multiple databases to improve performance and scalability. For example, a user database can be split into 2, where one database stores users with even IDs and the other stores users with odd IDs.
