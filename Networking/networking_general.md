@@ -43,3 +43,8 @@ DHCP:
 - DHCP Scope: Range of IP addresses that the DHCP server can assign to clients.
 - IP addresses are leased, not owned. This is to ensure the DHCP server can reclaim unused addresses and reassign them to other clients.
 - You can create reservations on the DHCP server, which assigns a specific IP address to a specific MAC address. This is useful for devices that need a consistent IP address.
+
+Websockets:
+- Example to showcase its use: Chat application: john sends a message to Mary. In a traditional REST-based approach, John would send a POST to the server, and Mary wouldn't get notified. We would have to use short polling: Mary would have to query the server every few seconds to check for new messages. This is outdated, inefficient, but still used due to its simplicity. In this scenario, the server can't push data to the client.
+- With websockets: Client and server establish a persistent connection. The client sends over a message to the server, and the server can broadcast the message to Mary in real-time. 
+- Websockets are built on top on TCP and work on the application layer (L7).

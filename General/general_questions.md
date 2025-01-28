@@ -1,3 +1,6 @@
+# General Questions
+These questions test one's understanding of the Linux process lifecycle, system calls, the boot process, and general internet networking protocols.
+
 # Explain in details, down to the machine language, what steps are executed after you type `ps` in the terminal
 - Terminal captures input `ps` as a string and stores it in a buffer
 - Shell (Bash probably) reads the input when Enter is pressed
@@ -24,5 +27,7 @@
 
 
 # You log in to your favorite OS from cold boot, you open a browser windows and type google.com and hit enter. Explain what happens NEXT in as much detail as possible
+- 
+
 
 # What happens during the boot process from the moment you turn on the machine until you get a login prompt?
