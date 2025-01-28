@@ -86,5 +86,12 @@ Here is a list of technologies and methodologies that major companies use to bui
 - Application nodes should be stateless to simplify consistency and load balancing.
 - Object storage (S3) should be used for images and other static files.
 - Large tasks should be queued, with workers processing them asynchronously to avoid app response bottlenecks.
-- For notification purposes, web sockets should be used. They allow for bi-directional communication between the server and client.
+- For notification purposes, web sockets should be used. They allow for bi-directional communication between the server and client. However, web sockets tend to be stateful, so they should be used sparingly.
 - Sharding: Splitting data across multiple databases to improve performance and scalability. For example, a user database can be split into 2, where one database stores users with even IDs and the other stores users with odd IDs.
+- The publish-subscribe communication model is often used because of its scalability. If a company wants to develop a new feature that depends on the existing data stream, they can just subscribe to the data stream and process the data as needed. The data stream is not affected/unaware of the new feature.
+
+# How would I design Spotify?
+1. Identify key features: Songs, playlists, users, artists, podcasts
+2. Define problem scope: Ask what should be the focus? For this example: Finding and playing music
+3. Define use cases: browse music, search for song, play song
+4. Think about metrics: How many users? A billion. How many songs? 100 million. File size: assume about 5 MB per song. So around 500TB of total song data. With 3x replication, Around 1.5PB. Metadata: 100B per song ish, so 10GB total, not a factor.
