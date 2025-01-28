@@ -79,4 +79,10 @@ Best Practices:
 - Use tools like Promehteus and Grafana for observability
 - Simulate failures to ensure resilience in production
 
-
+# Building Scalable Systems
+Here is a list of technologies and methodologies that major companies use to build scalable systems:
+- When there might be complex relationships between data, use a graph database. It closely mimics the organic relationships that form in common social media platforms.
+- Automate as much as possible. 
+- Application nodes should be stateless to simplify consistency and load balancing.
+- Object storage (S3) should be used for images and other static files.
+- Large tasks should be queued, with workers processing them asynchronously to avoid app response bottlenecks.
