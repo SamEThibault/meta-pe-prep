@@ -27,7 +27,24 @@ These questions test one's understanding of the Linux process lifecycle, system 
 
 
 # You log in to your favorite OS from cold boot, you open a browser windows and type google.com and hit enter. Explain what happens NEXT in as much detail as possible
-- 
+- Browser parses the URL and determines this is a URL and not a search query.
+- It then checks if the resource for google.com is cached in the browser's cache. 
+- Assuming no cache hit, the browser asks the OS for the IP address. 
+- The OS checks its DNS cache
+- Assuming no cache hit, the OS forwards the query to a DNS resolver (usually the one provided by the ISP)
+- The DNS resolver begins querying the DNS hierarchy: root nameserver -> TLD nameserver -> authoritative nameserver -> returns IP for google.com
+- The OS receives the IP address and forwards it to the browser
+- The browser initiates a TCP connection to that IP addr through port 443 (HTTPS)
+- The 3-way handshake is performed: SYN (client) -> SYN-ACK (server) -> ACK (client)
+- This encrypts the communication using SSL/TLS, the client and server agree on a cipher suite, and exchange keys, and the client verifies the server's certificate during this handshake. 
+- Now we have an encrypted channel between the client and server, so the client now sends an HTTP GET request to the server. 
+- The request hits one of google's load balancers, which forwards the request to one of google's servers.
+- The web server processes the request, retrieves the homepage, and returns the HTML content to the client in the form of a 200 OK response.
+- The browser begins parsing the HTML document line by line.
+- It will probably encounter links to additional resources (CSS, JS, images), and it will start fetching these resources.
+- The browser's rendering engine converts the parsed HTML and CSS into a visual representation of the page.
+- It might execute JS code.
+- Once all resources are fetched and the page is rendered, the browser displays the page to the user.
 
 
 # What happens during the boot process from the moment you turn on the machine until you get a login prompt?
