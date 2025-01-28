@@ -48,3 +48,14 @@ These questions test one's understanding of the Linux process lifecycle, system 
 
 
 # What happens during the boot process from the moment you turn on the machine until you get a login prompt?
+- PSU supplies electrical power to the motherboard and other components
+- POST: basic I/O system (BIOS) or UEFI firmware performs a POST to verify the basic functioanlity of hardware components like CPU, RAM, and storage devices.
+- BIOS/UEFI firmware initializes hardware components and prepares the system for booting an OS
+- It identifies the configured boot order and selects the first bootable device
+- It reads the boot sector for the selected boot device, which contains the bootloader
+- The bootloader is loaded into memory, it loads the OS kernel into memory and transfers control to it
+- The kernel initializes hardware drivers, detects devices, and configures hardware
+- It mounts the root filesystem to access system files and scripts (needed to run the init process)
+- It executes the init process (systemd).
+- The init process runs ititialization scripts and starts system services
+- A virtual console TTY is displayed with a login prompt
