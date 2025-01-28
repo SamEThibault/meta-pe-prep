@@ -35,3 +35,11 @@ TCP Congestion control:
 - Slow Start Threshold: Determines the boundary between the slow start and congestion avoidance phases. 
 - Round-Trip Time (RTT): Time it takes for a packet to travel from the sender to the receiver and back. It influences retransmission timeouts and adaptive adjustments.
 
+DHCP:
+- Dynamic Host Configuration Protocol: Every network on a network has to have an IP addr. There's 2 ways a computer can be assigned an addr: Static IP or dynamic IP. 
+- Static IP: user assigns the IP addr manually
+- Dynamic IP: IP addr is assigned automatically by a DHCP server. The server maintains a pool of IP addresses and leases them to clients for a specific period of time. It can also assign subnet masks, default gateways, and DNS server addresses.
+- DHCP servers are usually located on a network router.
+- DHCP Scope: Range of IP addresses that the DHCP server can assign to clients.
+- IP addresses are leased, not owned. This is to ensure the DHCP server can reclaim unused addresses and reassign them to other clients.
+- You can create reservations on the DHCP server, which assigns a specific IP address to a specific MAC address. This is useful for devices that need a consistent IP address.
