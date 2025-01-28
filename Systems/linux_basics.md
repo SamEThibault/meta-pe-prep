@@ -260,3 +260,31 @@ We can use: `ps aux | grep Z` to find zombie processes
     - Kernel space: shared and mapped identically for all processes, handles OS functions
     
     - User space: private for each process
+
+## Finding Shell Resource Limits
+    - ulimit -a
+
+    - ulimit -n: max number of open file descriptors
+
+    - ulimit -u: max number of user processes
+
+    - ulimit -c: max core file size
+
+## Interprocess Communication Mechanisms
+    - Processes communicate with each other and with the kernel to coordinate their activities.
+    - Linux supports a number of IPC mechanisms: signals and pipes being the most popular.
+    - Signals: software interrupts sent to a process to notify it of an event.
+    - Pipes: allow two processes to communicate with each other in a producer-consumer fashion.
+    - Sockets: IPC sockets enable channel-based comms for processes on the same physical device. IPC sockets rely on the local system kernel to suppoprt comms, they communicate using a local file as a socket address. They have the same APIs as network sockets. 
+    - Shared Memory: Allows one or more processes to communicate via memory that appears in all of their virtual address spaces. 
+
+## More on Load Averages
+    - 0-1*num cores
+    - Load averages are a measure of computational work a system performs over time. They are typically displayed as three values representing the system load during the last 1, 5, and 15 minutes. (using top, for example)
+    - If you have a single-core system, a load average of 1.00 means that the CPU is fully utilized. On a system with two cores, a load average of 2.00 indicates full utilization. You can have values greater than the number of cores on a system, but that means the system has a backlog of processes in the "wait" state.
+
+## Static vs Dynamic Linking
+    - Dynamic linking means that the code for some external routines is located and loaded when the program is first run.
+    - When you compile a program that uses shared libraries, these libraries are dynamically linked to the program by default.
+    - Dynamically linked programs take up less disk space and less virtual memory if more than 1 program uses the routines in the shared libraries
+    - Static linking means that the code for all routines called by the program becomes part of the executable file. Statically linked programs can be moved to run on systems that do not have the shared libraries installed.
