@@ -167,3 +167,37 @@ Time in Linux: 1 jiffy = 1 tick of the clock, which can be configured to 500, 25
 
 In order to avoid wasting CPU cycles for servicing the timer interrupt, the kernel can even be configured in tickless mode. This is useful when there is only one process running in the system, or when the CPU is idle and needs to go into power-saving mode. HRTs (high-resolution timers) allow the kernel to keep track of time in sub-jiffy granularity. 
 
+Static priority: Linux associates a nice value with each thread. The default is 0, but this can be changed using the nice(value) system call, where value ranges from -20 to +19. -20 is highest priority. Only sysadmins can set -1 to -20 vals.
+
+Runqueue: key data structure used by the scheduler to track all runnable tasks in the system and select the next one to run. A runqueue is associated with each CPU in the system.
+
+Completely Fair Scheduler (CFS): Main idea is to use a red-black tree as the runqueue data structure. Tasks are ordered in the tree based on the amount of time they spend running on the CPU, called vruntime. 
+![alt text](static/image-12.png)
+
+Each internal node in the tree corresponds to a task. Children to the left have had less CPU time, and will be scheduled sooner. 
+CFS can be described as follows:
+- Schedule the task which has had the least CPU time, typically the leftmost node in the tree.
+- Periodically, CFS increments the task's vruntime value based on the time it has already run, and compares this to the current leftmost node in the tree. If the running task still has a smaller vruntime, it will continue to run. Otherwise, it will be inserted at the appropriate place in the tree, and CPU will be given to the leftmost node.
+- To account for nice values and priorities, CFS changes the effective rate at which a task's virtual time passes when it's running.
+
+Selecting a node to run can be done in constant time, wheras inserting a task in the runqueue is done in O(logn) time. This is usually acceptable.
+
+*quick note: red-black trees are self-balancing binary search trees. They are used to store sorted data and allow for efficient insertion, deletion, and search operations.
+
+The CFS scheduler performs periodic load balancing across runqueues of different CPUs to ensure that sys load is well balanced. 
+
+A runqueue only consists of tasks that are runnable. For tasks that are waiting on I/O ops or other kernel events, they join waitqueue.
+A waitqueue is associated with each event that tasks may wait on. 
+
+### Synchronization
+The kernel code contains synchronization variables in numerous locations. A spinlock is an example, which prevents multiple threads from accessing shared resources at the same time. It's a loop that a thread enters when it tries to acquire a lock, and the thread keeps looping until it gets the lock.
+
+At the lowest level, Linux provides wrappers around the hardware-supported atomic instructions, via operations such as atomic_set and atomic_read.
+
+Since modern hardware reorders memory operations, Linux provides memory barriers. Using operations like rmb and wmb guarantees that all read/write memory operations preceding the barrier call have completed before any subsequent accesses take place.
+
+Threads that aren't allowed to block use spinlocks and spin read/write locks. 
+
+Threads that are allowed to block use mutexes and semaphores. 
+
+(Page 751)
