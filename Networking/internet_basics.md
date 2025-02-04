@@ -20,7 +20,7 @@ Process:
 7. The resolver then queries the TLD nameserver
 8. The TLD nameserver responds with the authoritative nameserver
 9. The resolver queries the authoritative nameserver, who returns the IP addresses for the query
-![](image.png)
+![](static/image.png)
 
 Types of Queries:
 - **Recursive query**: DNS client requires that a DNS server (usually the resolver) will respond to the client with either the requested resource record or an error msg. (Client -> Resolver)

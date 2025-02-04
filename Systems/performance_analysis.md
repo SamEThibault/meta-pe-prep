@@ -40,7 +40,7 @@ Summary:
 
 ## More on Linux Performance Tools and Methodologies
 [https://netflixtechblog.com/netflix-at-velocity-2015-linux-performance-tools-51964ddb81cf](Source)
-![alt text](image.png)
+![alt text](static/image.png)
 
 ### Problem Statement Method
 - What makes you think there is a perf problem?

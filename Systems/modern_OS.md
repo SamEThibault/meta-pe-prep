@@ -2,7 +2,7 @@
 Notes from Andrew S. Tanenbaum's book "Modern Operating Systems", specifically, Chapter 10 case study of Linux.
 
 ## Interfaces to Linux
-![alt text](image-1.png)
+![alt text](static/image-1.png)
 
 Programs make system calls by putting the arguments in registers, or sometimes on the stack, and issuing trap instructions to switch from user mode to kernel mode. Since there is no way to write a trap instruction in C, a library is provided, with one procedure per system call. These are written in assembly, but can be called from C.
 
@@ -33,10 +33,10 @@ Roughly speaking, linux consists or standard utility programs that can be divide
 - System administration
 - Miscellaneous
 
-![alt text](image-2.png)
+![alt text](static/image-2.png)
 
 ## Kernel Structure
-![alt text](image-3.png)
+![alt text](static/image-3.png)
 
 The kernel sits directly on the hardware and enables interactions with I/O devices and the memory management unit (MMU) and controls CPU access to them. At the lowest level, it contains interrupt handlers, which are the primary way for interacting with devices, and the low-level dispatching mechanism. This dispatching occurs when an interrupt happens. It stops the running process, saves its state in the kernel process structures, and starts the appropriate driver. Process dispatching also happens when the kernel compeltes some operations and it's time to start up a user process again. 
 
@@ -61,15 +61,15 @@ Daemons: Background processes. These are started by a shell script when the syst
 Processes are created in a simple manner: the fork system call creates an exact copy of the original process. The parent and child each have their own, private memory images. Open files are shared between parent and child: if a parent has a file open, the child also has it open. Changes made by either one will be visible to both (obviously, since that's also the case with all other unrelated processes).
 
 Processes are named by their PIDs. Fork returns 0 to the child and the PID of the child to the parent. The child can find out its own PID by calling getpid. 
-![alt text](image-4.png)
+![alt text](static/image-4.png)
 
 Processes in Linux can communicate with each other using a form of message passing. These channels are called pipes. 
-![alt text](image-5.png)
+![alt text](static/image-5.png)
 
 Processes can also communicate in another way: software interrupts. A process can send a signal to another process. Processes can tell the system what they want to happen when an incoming signal arrives. They can ignore it, catch it, or let the signal kill the process. 
 
 A process can only send signals to members of its process group, which consists of its parent (and other ancestors), siblings, and children. 
-![alt text](image-6.png)
+![alt text](static/image-6.png)
 
 ### Process Management System Calls
 To wait for a child to finish, the parent executes a waitpid system call, which has 3 parameters:
@@ -77,7 +77,7 @@ To wait for a child to finish, the parent executes a waitpid system call, which 
 - Second one is the address of a variable that will be set to the child's exit status.
 - Third one determines whether the caller blocks or returns if no child is already terminated.
 
-![alt text](image-7.png)
+![alt text](static/image-7.png)
 
 The shell needs the child process to execute the command typed by the user. It does this by using the exec system call, which causes its entire core images to be replaced by the file named in its first parameter. In general, exec has 3 params:
 - The name of the file to be executed (program name)
@@ -86,7 +86,7 @@ The shell needs the child process to execute the command typed by the user. It d
 Other library procedures are provided to allow parameters to be omitted or specified in various ways (execve, execv, etc..)
 All of these procedures invoke the same underlying system call.
 
-![alt text](image-8.png)
+![alt text](static/image-8.png)
 
 sigaction: processes can use this system call to catch a signal. 
 alarm: system call that causes a signal to be sent to the caller after a specified number of seconds.
@@ -128,6 +128,42 @@ After the child process starts running:
 - Arguments and environment strings are copied to the new stack, signals are reset, and the registers are initialized to 0. 
 - Now, the command can start running.
 
-![alt text](image-9.png)
+![alt text](static/image-9.png)
 
 ### Threads
+The main issue in introducing threads is maintaining the correct traditional UNIX smenatics. 
+
+```pid = clone(function, stack_ptr, sharing_flags, arg);```
+
+The call creates a new thread, either in the current process or in a new process, depending on sharing_flags. If the new thread is in the current process, it shares the address space with the existing threads. If the address space is not shared, then the new thread gets an exact copy of the address space, but subsequent writes by the new thread are not visible to the old ones. In either case, the new thread gets its own private stack, with the stack ptr initialized to stack_ptr. 
+
+![alt text](static/image-11.png)
+
+UNIX systems associate a single PID with a process, independent of whether the process has one thread or many. In order to be compatible with other UNIX systems, Linux distinguishes between a PID and a task identifier (TID). Both fields are stored in the task_struct. When clone is used to create a new process that shares nothing with its creator, PID is set to a new value: otherwise, the task receives a new TID, but inherits the PID. This ensures all threads in a process receive the same PID. 
+
+Threads allow multiple executions to take place in the same process environment, to a large degree, independent of one another. Having multiple threads running in parallel in one process is analogous to having multiple processes running in parallel in one computer. In this case, threads share an address space and other resources, while processes share physical memory, disks, printer, and other resources.
+
+![alt text](static/image-10.png)
+
+
+### Scheduling
+Linux threads are kernel threads, so scheduling is based on threads, not processes. 
+
+There's 3 classes of threads for scheduling purposes:
+- Real-time FIFO
+- Reat-time round robin
+- Timesharing
+
+Real-time FIFO threads are the highest priority and are not preemtable except by a newly readied real-time FIFO thread with even higher priority. 
+Real-time round-robin threads are the same as real-time FIFO threads except that they have multiple quanta (quantum: amount of CPU spends on a thread before switching to another thread) associated with them, and are preemptable by the clock. 
+
+If multiple real-time round-robin threads are ready, each one is run for its quantum, after which it goes to the end of the list of real-time round-robin threads. 
+
+Real-time threads aren't actually real-time, they're just higher priority than timesharing threads. They are internally represented with priority levels from 0 to 99, 0 being the highest priority.
+
+The conventional, non-real-time threads form a separate class and are scheduled by a separate algorithm so they do not compete with the real-time threads. These are associated with priority levels from 100 to 139, 100 being the highest priority. 
+
+Time in Linux: 1 jiffy = 1 tick of the clock, which can be configured to 500, 250, or even 1Hz. 
+
+In order to avoid wasting CPU cycles for servicing the timer interrupt, the kernel can even be configured in tickless mode. This is useful when there is only one process running in the system, or when the CPU is idle and needs to go into power-saving mode. HRTs (high-resolution timers) allow the kernel to keep track of time in sub-jiffy granularity. 
+
