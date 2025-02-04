@@ -200,4 +200,86 @@ Threads that aren't allowed to block use spinlocks and spin read/write locks.
 
 Threads that are allowed to block use mutexes and semaphores. 
 
-(Page 751)
+### Booting Linux
+Generally, the following steps represent the boot process:
+- BIOS performs Power-On-Self-Test (POST) and initial device discovery and initialization
+- Next, the first sector of the boot disk, the master boot record (MBR), is read into fixed memory location and executed. This sector contains a small program that loads a standalone program called boot from the boot device, which copies itself to a fixed high-memory address.
+- Boot then reads the root directory of the boot device. It reads the OS kernel and jumps to it. At this point, it's finished its job and the kernel is running
+- The kernel start-up code is written in assembly and is highly machine dependent. Usually it sets up the kernel stack, identifies CPU type, calculates amount of RAM present, disables interrupts, enables the MMU, and finally calls the C main procedure to start the main part of the OS
+- The C code does some initialization: allocates a message buffer to help debug boot problems, the kernel data structures are allocated.
+- At this point, the system begins autoconfiguration. It uses config files telling what kinds of I/O devices might be present, and probes devices to see which ones are actually present.
+- Once all hardware is configured, process 0 is crafted: its stack is set up, and its run
+- Process 0 continues initialization, doing things like programming the real-time clock, mounting the root file system, and creating init (process 1) and the page daemon (process 2)
+- Init checks its flags, and figures out if its a single user or multiuser environment. If single, it forks off a process that executes the shell and waits for this process to exit. If multiuser, it forks a process that executes the system initialization shell script `etc/rc`, then reads `/etc/ttys`, which lists the terminals and some of their properties. For each enabled terminal, it forks off a copy of itself, which does some housekeeping and then executes a program called getty.
+- Getty sets the line speed and other peroperties for each line, and then displays login prompt.
+![alt text](static/image-13.png)
+
+## Memory management
+### Fundamentals
+Each process has an address space that logically consists of 3 segments: text, data, and stack. 
+- Text segment: contains machine instructions that form the program's executable code. It's produced by the compiler and assembler. Normally read-only, so it doesn't shrink or grow.
+- Data segment: contains storage for all the program's variables, strings, arrays, and other data. It's divided into initialized data and uninitialized data (BSS block). Initialized part of the data segment contains variables and compiler constants that need and initial value when the program is started. All the BSS variables are initialized to 0. The data segment can change. Programs modify their variables all the time. It can grow and shrink as memory is dynamically allocated. The system call brk allows a program to set the size of its data segment. This is used by malloc. The process address-space descriptor contains info on the range of dynamically allocated memory areas in the process, called the heap.
+- Stack segment: Starts at or near the top of the virtual address space and grows down toward 0. If it grows below the bottom of the stack range, stack overflow. 
+![alt text](static/image-14.png)
+
+When a program starts, its stack is not empty. It contains all the environment (shell) variables as well as the command line typed to the shell to invoke it. This is how programs can discover their arguments. The stack is used to store temp data like local variables, function parameters, and return addresses used within currently active functions.
+
+Linux supports shared text segments. Mapping is done by the virtual-memory hardware. 
+
+Data and stack segments are never shared except after a fork, and then only those pages that are not modified.
+
+Processes can also access file data through memory-mapped files. This makes it possible to map a file onto a portion of a process's address space so that the file can be manipulated as if it were a byte array in memory. Much faster than read write I/O. 
+
+### Memory Management System Calls
+Most Linux systems have system calls for managing memory. 
+![alt text](static/image-15.png)
+
+### Memory Management Implementation
+Each Linux process on a 32-bit machine gets 3 GB of virtual address space for itself, with the remaining 1 GB reserved for its page tables and other kernel data. That 1 GB isn't visible in user mode, but becomes accessible when the process traps into the kernel.
+
+Technically, on 64-bit machines, each process gets 128 TB of virtual address space.
+
+
+### Physical Memory Management
+In order to allow multiple processes to share the physical memory, Linux monitors the use of the physical memory, allocates more memory as needed by processes, dynamically maps portions of the physical memory into the addr space of different processes.
+
+Not all physical memory can be treated identically, especially with respect to I/O and virtual memory. Linux distinguishes between the following memory zones:
+- `ZONE_DMA and ZONE_DMA32`: pages that can be used for DMA (direct memory access)
+- `ZONE_NORMAL`: normal, regularly mapped pages
+- `ZONE_HIGHMEM`: pages with high-memory addresses, which are not permanently mapped
+
+The layout of the memory zones is architecture dependent. The kernel maintains a zone structure for each of the 3 zones, and can perform memory allocations for the 3 zones separately. 
+
+Main memory in Linux consists of 3 parts: the first 2 parts, the kernel and memory map, are pinned in memory and can't be swapped out. The rest of memory is divided into page frames, each of which can contain a text, data, or stack page, a page-table page, or be on the free list.
+
+The kernel maintains a map of the main memory which contains all info about the use of the physical memory in the system, such as its zones, free page frames, etc.
+
+![alt text](static/image-16.png)
+
+Linux maintains an array of page descriptors, of type page, one for each frame in the system. It calls it mem_map. Each page descriptor contains a ptr to the address space that it belongs to, and in the case the page is not free, a pair of ptrs which allow it to form doubly linked lists with other descriptors. This allows keeping together all free page frames.
+
+Since physical memory is divided into zones, each zone maintains a zone descriptor, which contains info about the memory util within each zone, such as num of active or inactive pages, etc.
+
+A zone descriptor also contains an array of free areas. 
+
+Linux supports dynamically loaded modules, most commonly device drivers. Each one must be allocated a contiguous piece of kernel memory. 
+
+### Memory-Allocation Mechanisms
+There are several mechanisms for memory allocation. The main one for allocating new page frames of physical memory is the page allocator, which operates using the buddy algorithm:
+- Initially memory consists of a single contiguous piece.
+- When a request for memory comes in, it is first rounded up to a power of 2 (8 pages, for ex)
+- The full memory chunk is then divided in half
+- Since each of these pieces is still too large, the lower piece is divided in half again, and again.
+- When we have a chunk of the correct size, it's allocated to the caller.
+
+That leads to considerable internal fragmentation because if you want a 65-page chunk, you have to ask for and get a 128-page chunk.
+
+So, Linuxhas a second memory allocation, the slack allocator, which takes chunks using the buddge algorithm but then carves slabs (smaller units) from them and manages the smaller units separately.
+
+Since the kernel frequently creates and destroys objects of certain type (task_struct), it relies on object caches. These consist of ptrs to one or more slab which can store a number of objects of the same type.
+
+A third memory allocator, vmalloc, is also available and is used when the requested memory needs to be contiguous only in virtual space, not in physical memory. 
+In practice, this is true for most of the requested memory. But it results in performance degradation, so only used for large amount of contiguous virtual address requests.
+
+### Virtual Address-Space Representation
+(763)
