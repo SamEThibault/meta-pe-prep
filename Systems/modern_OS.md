@@ -282,4 +282,36 @@ A third memory allocator, vmalloc, is also available and is used when the reques
 In practice, this is true for most of the requested memory. But it results in performance degradation, so only used for large amount of contiguous virtual address requests.
 
 ### Virtual Address-Space Representation
-(763)
+Virtual addr space is divided into homogeneous, contiguous, page-aligned areas or regions. There can be holes in the address space between areas. Referencing these areas creates a fatal page fault. 
+
+The page size is fixed: 4KB for Pentium, 8KB for the Alpha. On recent arhitectures, linux can support massive pages of 2 MB or 1 GB each.
+
+vm_area_struct: describes a region of the address space. All these structs for a process are linked together in a list. These structs describe protection modes, and which direction it grows in. It also records whether the area is private to the process or shared.
+
+### Paging
+Linux, like other modern UNIX versions, no loner moves entire processes in and out of memory. Instead, it moves pages. And all memory management components is done on a page-granularity.
+
+Main concept: MMU knows about some area of secondary memory (HDD/SSD) that is used as "vram". This VRAM space is used to store paged-out pages from the main memory when the system is running low on memory. This is called swapping. 
+
+A process need not be entirely in memory in order to run. All that is actually required is the user structure and the page tables. If these are swapped in, the process is deemed "in memory", and can be scheduled to run. The pages of the text, data , and stack segments are brought in dynamically, one at a time, as they are requested. 
+
+Paging is implemented partly by the kernel and partly by a new process called the page daemon (process 2). That daemon periodically looks around to see if there is any work to do. If the free memory is too low, it starts freeing up more pages. 
+
+Linux is a fully demand-paged system with no pre-paging.
+
+Pages are stored in paging partitions or swap files, with partitions being more efficient. Pages are only allocated in the swap area when required, and the system prioritizes paging partitions over files.
+
+### Page Replacement Algorithm
+Linux tries to keep some pages free so that they ca be claimed as needed. This pool must be continually replenished. PFRA (page frame reclaiming algorithm) is used to decide which pages to free.
+
+There are 4 types of pages: unreclaimable (reserved or locked pages, kernel mode stacks), swappable (must be written back to the swap area or the paging disk partition before it can be reclaimed), syncable (must be written back to disk if they have been marked as dirty), and discardable.
+
+kswapd is the process that initiates the page-replacement algorithm. During each run, only a certain target number of pages is reclaimed, typically around 32, this controls I/O loads, and can be configured.
+
+It first tries to reclaim easy pages, then goes for the harder ones. 
+
+## I/O In Linux
+All I/O devices are made to look like files and are accessed as such with the same read and write system calls that are used to access all ordinary files. In some cases, device parameters must be set, and this is done using a special system call. 
+
+### Fundamentals
+(767)
