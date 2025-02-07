@@ -400,3 +400,26 @@ Locking: In some applications, 2 or more processes may be using the same file at
 There's 2 kinds of locks: shared locks and exclusive locks. If a portion of a file already contains a shared lock, a second attempt to place a shared lock on it is allowed, but an attempt to put an exclusive lock on it will fail. 
 
 ### File-System Calls in Linux
+Many system calls relate to files and the file system. Let's look at the sys calls that operate on individual files:
+- `creat` call can be used to create a new file, and the protection bits are specified. The creat call also opens the file for writing. It returns a file descriptor. If it's done on an existing file, that file is truncated to length 0. 
+- To read or write existing file, file must first be opened by calling `open` or `creat`. Afterward, the file can be closed by `close`. File descriptor can then be reused by a subsequent open call.
+
+When a program starts executing in the standard way, file descriptors 0, 1, and 2 are already opened for stdin, stdout, and stderr.
+![alt text](static/image-22.png)
+
+read and write are the most used file-related sys calls. They are simple, they have a file descriptor, a buffer, and the number of bytes to read or write. Though nearly all programs read and write files sequentially, some programs need to be able to access any part of a file at random. So each file has a ptr that indicates the current position in the file. This ptr is set to 0 when the file is opened, and is incremented by the number of bytes read or written.
+
+For each file, Linux keeps track of the file mode (regular, dir, special file), size, time of last modification, and other information. Programs can ask to see this info via the `stat` system call. The first param is the file name, the second is a ptr to a structure where the info requested is to be put. Stat returns a bunch of fields related to the file. 
+
+The `pipe` system call is sued to create shell pipelines. It creates a kind of pseudofile, which buffers the data between the pipeline components, and returns file descriptors for both reading and writing the buffer. 
+Example: `sort <in | head -30`
+fd 1 (stdout) in process running sort would be set by the shell to write to the pipe, and fd 0 (stdin) in the process running head would be set to read from the pipe.
+
+This allows us to connect programs in arbitrary ways without having to modify them at all.
+
+`fcntl` system call is used to lock and unlock files, apply shared or exclusive locks, and perform a few other file-specific operations. 
+
+Let's look at some system calls that relate more to directories or the file system as a whole:
+![alt text](static/image-23.png)
+
+(783)
