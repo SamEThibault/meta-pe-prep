@@ -372,3 +372,31 @@ When a module is loaded, several things have to happen:
 
 
 ## The Linux File System
+### Fundamentals
+The ext2 file system is the main file system used by Linux. However, it supports several dozen file systems using the Virtual File System (VFS) layer. 
+
+A Linux file is a sequence of 0 or more bytes containing artbitrary information. No distinction is made between ASCII files, binary files, or any other kind of file. File names are limited to 255 characters, and all the ASCII characters except NUL are allowed in file names. 
+
+By convention, many programs expect file names to consist of a base name and an extension, that's fine, but these conventions are not enforced by the system. 
+
+Directories are also stored as files and to a large extent can be treated like files. Here are the most common root directories:
+![alt text](static/image-19.png)
+
+There are 2 ways to specify file namee: absolute path, relative path (to the current working directory).
+
+Links: alot of the time, a user needs to refer to a file that belongs to another user. If 2 users are sharing a file, it will be located in a directory belonging to one of them, so the other would have to use an absolute path name to refer to it. So users can make a new directory entry that points to an existing file. This is called a link.
+
+![alt text](static/image-20.png)
+
+In addition to regular files, Linux also supports character special files and block special files. As mentioned earlier, these are used to interface to devices. Opening and reading from /dev/tty reads from the keyboard. 
+
+How to handle multiple disks:
+- One solution is to put a self-contained file system on each one and just keep them separate. With this solution, the user has to specify both the device and the file when anything other than the default is needed. This is the approach taken by a number of systems, including Windows 8.
+- Linux instead allows one disk to be mounted in another disk's file tree. So, we could mount another device on the directory /b, and the user now sees a single file tree, and no longer has to be aware of which file resides on which device. 
+![alt text](static/image-21.png)
+
+Locking: In some applications, 2 or more processes may be using the same file at the same time, which may lead to race conditions. One solution is to program the application with critical regions. This is inconvenient if the processes don't even know about each other. So, processes can lock as little as a single byte and as much as an entire file in one operation. The locking mechanism requires the caller to specify the file to be locked, the starting byte, and the number of bytes. If the operation succeeds, the system makes a table entry noting tha the bytes are locked. 
+
+There's 2 kinds of locks: shared locks and exclusive locks. If a portion of a file already contains a shared lock, a second attempt to place a shared lock on it is allowed, but an attempt to put an exclusive lock on it will fail. 
+
+### File-System Calls in Linux
