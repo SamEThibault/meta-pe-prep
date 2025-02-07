@@ -314,4 +314,61 @@ It first tries to reclaim easy pages, then goes for the harder ones.
 All I/O devices are made to look like files and are accessed as such with the same read and write system calls that are used to access all ordinary files. In some cases, device parameters must be set, and this is done using a special system call. 
 
 ### Fundamentals
-(767)
+Special files are used to integrate I/O devices into the file system. Each I/O device is assigned a path name, usually in /dev. A disk might be /dev/hdl. These can be accessed the same way as any other file. No special commands or system calls are needed. For example, `cp file /dev/lp` copies the file to the printer, causing it to be printed. 
+
+2 types of special files:
+- Block: block special file consists of a sequence of numbered blocks. Each block can be individually addressed and accessed (a program can open and read block 124 without first having to read blocks 0 to 123.) Usually, block special files are used for disks
+- Character: Character special files are used for devices and input or output a character stream: keyboards, printers, networks, mice...
+
+Each special file is associated with a device driver that handles the corresponding device. Each driver is identified by a major device number. 
+
+### Networking
+Sockets: analogous to mailboxes and telephone wall sockets in the real world. Used to interface to the network.
+![alt text](static/image-17.png)
+Sockets can be created and destroyed dynamically. Creating a socket returns a file descriptor, which is needed for establishing a connection, reading data, writing data, and releasing the connection. There's 3 common types of networking sockets support:
+- Reliable connection-oriented by stream (pipe of streaming bits)
+- Reliable connection-oriented packet stream (TCP)
+- Unreliable pakcet transmission (UDP)
+
+Before a socket can be used for networking, it must have an address bound to it (IPv4 or IPv6). Once sockets have been created on both the source and destination computers, a connection can be establised between them. Once party makes a listen system call on a local socket, which creates a buffer and blocks until data arrives. The other makes a connect system call, giving as parameters the file descriptor for a local socket and the address of a remote socket.
+
+### I/O System Calls
+Though most I/O can be done by just using the proper file, sometimes there's a need for something that is device specific. This is implementation dependent in terms of how Linux does it, but there's 1 or many system calls that can be used to manipulate certain configurations to the devices.
+
+### I/O Implementation
+I/O is implemented by a collection of device drivers, one per device type. The function of the drivers is to isolate the rest of the system from the quirks of the hardware. By providing standard interfaces between the drivers and the rest of the OS, most of the I/O system can be put into the machine-independent part of the kernel. 
+
+When the user accesses a special file, the file system determines the major and minor device numbers belonging to it and whether it is a block special file of a character special file. The major number is used to index into one of 2 internal hash tables containing data structures for character or block devices. These contain pointers to the procedures to call to open the device, read it, write to it, and so on. 
+
+Adding a new device type to Linux means adding a new entry to one of these tables and supplying th ecorresponding procedures to handle the various operations on the device. 
+
+Each driver is split into 2 parts, both of which are part of the kernel and both of which run in kernel mode. The top half runs in the context of the caller and interfaces to the rest of Linux. The bottom half runs in kernel context and interacts with the device. Drivers are allowed to make calls to kernel procedures for memory allocation, timer management ... 
+
+The I/O system is split into 2 major components: the handling of block special files and the handling of character special files.
+
+I/O on block special files (disks): goal is to minimize the number of transfer that must be done. Linux has a cache between the disk drivers and the file system. A generic block layer holds these components together, performs the necessary translations between disk sectors, blocks, buffers, and pages of data, and enables the operations on them.
+
+The cache is a table is a table in the kernel for holding thousands of the most recently used blocks. A check is made there first, preventing a potential expensive disk access.
+
+![alt text](static/image-18.png)
+
+The page cache works for writes as well as for reads. When a program writes a block, it goes to the cache, not the disk. A prdflush daemon will flush the block to disk in the event the cache grows above a specified size. All dirty blocks are also written to the disk every 30 seconds. 
+
+Linux relies on an I/O scheduler to reduce latency of disk-head movements. It reorders or bundles read/write requests to block devices. Disk operations are sorted in a doubly linked list, ordered by the addr of the sector of the disk request. New requests are inserted in this list in a sorted manner. It's then merged with adjacent requests to minimize disk head movement.
+
+The interaction with character devices is pretty simple. There isn't really a need for random access. But line disciplines is an exeption. When enabled, local line editing can be done. 
+
+The interaction with network devices is different. While network devices also produce/consume streams of characters, their asynch nature makes them less suitable for easy integration with existing interfaces. The networking device driver produces packets consisting of multiple bytes of data, along with netowrk headers. These packets are then routed thorugh a series of network protocol driers, and ultimately are passed to the user-space application. skbuff is the socket buffer structure, and it's used to represent portions of memory filled with packet data.
+
+### Modules in Linux
+Loadable modules are introduced to make it easier for Linux users to add new device drivers to the system. They can be loaded and unloaded dynamically. They can be anything from character or block device drivers, to entire file systems, network protocols, performance monitoring tools, etc.
+
+When a module is loaded, several things have to happen:
+- The module has to be relocated on the fly
+- The system has to check to see if the resources the driver needs are available
+- Any interrupt vectors that are needed must be set up
+- The appropriate driver switch table has to be updated to handle the new major device type.
+- Finally: The driver is allowed to run to perform any device-specific initialization
+
+
+## The Linux File System
