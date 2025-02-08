@@ -26,6 +26,24 @@ d.setdefault("key", "value") # returns value of specified key, if key doesn't ex
 d.update() # update dict with key-val pairs
 d.values() # returns list of values in dict
 
+# Good practice: Very often, you'll have to either count the occurences in a list, instead of the common workflow:
+l = [1, 2, 3, 3, 3, 4, 5, 6, 6]
+counter = {}
+for item in l:
+    if item in counter:
+        counter[item] += 1
+    else:
+        counter[item] = 1
+
+# Do this instead:
+from collections import Counter
+counter = Counter(l) # this does the exact same thing, with the key being the items, and the value being the # of occurrences
+
+# To check if a key exists, use dict.get(), and set return value yourself to avoid if-else:
+for item in l:
+    counter[item] = counter.get(item, 0)
+
+
 # Ordered Dictionaries
 # LRU Cache example
 from collections import OrderedDict
