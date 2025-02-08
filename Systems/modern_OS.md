@@ -511,3 +511,40 @@ Caching is also used serverside to avoid disk accesses, but this is invisible to
 NFSv4: this was designed to simplfiy certain operations. NFSv4 is actually a stateful file system. This permits open operations to be invoked on remote files, since the remote NFS server maintains all file-system-related structures now, including the file pointer. Read operations then don't need to include absolute read ranges, but can be incrementally applied from the previous read position. This results in shorter messages, and also the ability to bundle multiple operations in one transaction. 
 
 ## Security in Linux
+### Fundamentals
+The user community for a Linux system consists of some number of registered users, ech of whom has a UID between 0 and 65535. Files, processes, and other resources are market with UID of their owner. By default, the owner of a file is th eperson who created it, althrough that can be changed. 
+
+Users can be organized into groups, which are also numbered with 16-bit integers called GIDs. Assigning users to groups is done manually and consists of making entires in a system database telling hwich user is in which group. A user can be in many groups. 
+
+The basic security mechanism in Linux is simple: each process carries the UID and GID of its owner. When a file is created, it gets the UID and GID of the creating process. The file also gets a set of permissions determined by the creating process. These perms specify what access the owner, their group, and the rest of the users have to the file. For each of these 3 categories, potential accesses are read, write and execute. 
+
+Since there are 3 categories of users and 3 bits per category, 9 bits are used to represent access rights:
+![alt text](static/image-29.png)
+
+There's also a bit before those when doing ls -l, it's the file type: - for normal, l for link, d for dir, c for char special file, b for clock special file.
+
+The user with UID 0 is the superuser (root). They have the power to read and write all files in the system, no matter what. They also have the ability to make a small number of protected system calls denied to ordinary users. 
+
+Directories are files and have the same protection modes that ordinary files do except the x bits refer to search permission instead of execute permission. 
+
+Special files corresponding to the I/O devices have the same protection bits as regular files. This can be used to limit access to these devices.
+
+To ensure controlled access to all I/O devices and other system resources, a new protection bit SETUID was added. When a program with the SETUID bit on is executed, the effective UID for that process becomes the UID of the executable file's owner instead of the user who invoked it. When a process attempts to open a file, if is the effective UID that is checked, not the underlying real UID. 
+
+Many sentitive Linux programs are owned by the root with the SETUID bit on. For example: the program that allows users to change their passwords "passwd", needs to write in the pw file. 
+
+So in summary: if SETUID is set for a executable, the effective UID for that process becomes the UID of the OWNER of that exec instead of the user who invoked it. 
+
+### Security System Calls in Linux
+There are only a small number of system calls relating to security. chmod is the most heavily used. It's used to change the protection mode.
+Only the owner of a file and the superuser can change the protection mode of a file.
+![alt text](static/image-30.png)
+
+The superuser can also change a process' UID and GID. This is done with the setuid and setgid system calls.
+
+### Implementation of Security
+When a user logs in, the login program "login" asks for a login name and a password. It hashes the pw and then looks in the password file /etc/passwd to see if the hash matches the one there. The reason for using hashes is to prevent the pw from being stored in plain text. If the pw is correct, the login program looks in /etc/passwd to see the name of the user's preferred shell. The login program then uses setuid and setgid to give itself the user's UID and GID (since it started out as SETUID root). Then, it opens the keyboard for stadnard input, the screen for standard output, and the screen for stadnard error. Finally, it executes the shell, thus terminating itself. 
+
+At this point, the shell is running with the correct UID and GID and stdin, stdout, and stderr all set to their default devices. All processes that it forks off (commands typed by the user) automatically inherit the shell's UID and GID, so they also will have the correct owner and group. All files they create also get these values. 
+
+When any process attempts to open a file, the system first checks the protection bits in the file's inode against the caller's effective UID and GID to see if the access is permitted. No checks are made on subsequent read or write calls. 
