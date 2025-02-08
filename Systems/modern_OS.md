@@ -422,4 +422,39 @@ This allows us to connect programs in arbitrary ways without having to modify th
 Let's look at some system calls that relate more to directories or the file system as a whole:
 ![alt text](static/image-23.png)
 
-(783)
+Linking to a file creates a new directory entry that points to an existing file.
+
+Users can write to a directory. This is to maintain file system integrity, they can use sys calls to do that. 
+
+### File System Implementation
+Virtual File System Layer (VFS): hides from higher-level processes and applications the differences among many types of file systems supported by Linux, whether they are residing on local devices or are stored remotely. Devices and other special files are also accessed throught he VFS layer. 
+
+ext2: Second extended file system (the first widespread linux file system). Modern default is ext4.
+
+Linux systems can handle multiple disk partitions, each with a different file system on it.
+
+### VFS
+Used to enable applications to interact with different file systems. VFS defines a set of basic file-system abstractions and the operations which are allowed on these abstractions. Invocations of the system calls described previously access the VFS data structures, determine the exact file system where the accessed file belongs, and via function ptrs stored in the VFS data structures invoke the corresponding operation in the specified file system. 
+
+There's 4 main file-system structures supported by VFS:
+- Superblock: contains criticial info about the layout of the system
+- i-nodes: each describe exactly one file (and dirs since they're files)
+- Dentry: directory entry, single component of a path
+- File: represents an open file
+
+Dentries are just used to make is easier to facilitate dir operations and traversals of paths. They're stored in a cache called dentry_cache.
+
+The file data structure is the in-memory reppresentation of an open file. And is created in response to the open system call. 
+
+### Ext2 File System
+This is mostly relevant to the new modern ext4, they're all based on the same fundamentals. 
+
+Let's look at the disk partition layout:
+![alt text](static/image-24.png)
+
+Block 0 is not used by Linux and ocntains boot code. Following it, the disk parittion is divided into groups of blocks, and each group is orgniazed as follows: superblock (contains info about layout of fs, num inodes, num disk blocks, start of the list of free disk blocks), then group descriptor(info about location so fht ebitmaps, num of free blocks and inodes in the group, num of dirs in the group).
+2 bitmaps are used to keep track of the free blocks and free inodes. Then there's inodes, which describe exactly one file. They contain accounting info, as well as info to locate all the disk blocks that hold that file's data.
+Then there's the actual data blocks, which is where all files and dirs are stored. If a file or directory consists of more than one block, the blocks don't need to be contiguous. 
+
+I was wondering: why does a directory need to be stored in the data block if it's just one inode with pointers to file inodes? But that's because the list of file pointers isn't actually stored in the inode. That would be inefficient and require lots of inodes (since they have a fixed size) for larger directories. So the list of file pointers is stored in the data block.
+
