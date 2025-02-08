@@ -548,3 +548,26 @@ When a user logs in, the login program "login" asks for a login name and a passw
 At this point, the shell is running with the correct UID and GID and stdin, stdout, and stderr all set to their default devices. All processes that it forks off (commands typed by the user) automatically inherit the shell's UID and GID, so they also will have the correct owner and group. All files they create also get these values. 
 
 When any process attempts to open a file, the system first checks the protection bits in the file's inode against the caller's effective UID and GID to see if the access is permitted. No checks are made on subsequent read or write calls. 
+
+# Summary 
+3 interfaces to Linux: 
+- The shell
+- C library
+- The system calls themselves
+
+This is how you can interact with the system.
+
+- Processes may fork off subprocesses
+- Process management in Linux views execution entity (a single-threaded process, or each thread in a multithreated process) as a distinguishable task
+- A process, or a single task in gneeral, is then represented via 2 key components: task_struct and the additional information describing the user address space. The former is always in memory, but the latter data can be paged in and out of memory.
+- Process creation is done by duplicating task_struct, and then setting the memory-image information to point to the parent's memory image. Actual copies of the parent's memory pages are only created if sharing is not allowed and memory modification is required (copy on write)
+- Scheduling is done using a weighted fair queueing algorithm that uses a red-black tree for the tasks' queue management.
+- The memory model consists of 3 segments per process: text, data, and stack.
+- Memory management is done by paging. An in-memory map keeps track of the state of each page, and the page daemon uses a modified dual-hand clock algorithm to keep enough free pages around
+- I/O devices are accessed using special files, each having a major device number and a minor device number.
+- Block device I/O uses the main memory to cache disk blocks and reduce the number of disk accesses
+- Character I/O can be done in raw mode, or character streams can be modified via line disciplines.
+- Networking devices are treated differently, by associating entire network protocol modules to process the network packets stream to and from the user process.
+- The file system: all disks are mounted into a single directory tree starting at a unique root.
+- To use a file, it must be first opened, which yields a file descriptor for use in reading and writing the file. Internally, the file system uses 3 main tables: the file descriptor table, the open-file-description table, and the inode table. The inode table is the most important, containing all the admin information about a file and the location of its blocks. Directories and devices are also represented as files.
+- Protection is based on controlling read, write and execute access for the owner, group, and others. For dirs, the execute bit means search permission. 

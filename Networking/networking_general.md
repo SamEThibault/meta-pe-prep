@@ -48,3 +48,10 @@ Websockets:
 - Example to showcase its use: Chat application: john sends a message to Mary. In a traditional REST-based approach, John would send a POST to the server, and Mary wouldn't get notified. We would have to use short polling: Mary would have to query the server every few seconds to check for new messages. This is outdated, inefficient, but still used due to its simplicity. In this scenario, the server can't push data to the client.
 - With websockets: Client and server establish a persistent connection. The client sends over a message to the server, and the server can broadcast the message to Mary in real-time. 
 - Websockets are built on top on TCP and work on the application layer (L7).
+
+ARP:
+- Address Resolution Protocol: used to map IP addr to MAC addr (physical device address)
+- Devices need the MAC address for communication on a LAN
+- Even if the client knows the destination IP addr, it needs the MAC addr to send the packet to the correct device:
+    - It looks at its ARP cache
+    - If it doesn't find it, it broadcasts a message on LAN that says "whoever has this ip addr, send me your MAC addr"
