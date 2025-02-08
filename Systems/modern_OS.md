@@ -458,3 +458,56 @@ Then there's the actual data blocks, which is where all files and dirs are store
 
 I was wondering: why does a directory need to be stored in the data block if it's just one inode with pointers to file inodes? But that's because the list of file pointers isn't actually stored in the inode. That would be inefficient and require lots of inodes (since they have a fixed size) for larger directories. So the list of file pointers is stored in the data block.
 
+The i-node table is a kernel data structure that holds all the i-nodes for currently open files and directories. 
+![alt text](static/image-25.png)
+
+How does the system read a file:
+- Assume the library does a system call like this: n = read(fd, buffer, nbytes)
+- When the kernel gets control, it checks its internal file-descriptor array, which is indexed by fd, and finds the entry. This entry doesn't actually contain a pointer to the i-node (for reasons we won't discuss), but it does contain a pointer to an entry in the open-file-descriptor table. (this entry contains a ptr to the i-node, and contains info about the current position in the file). This ensures that children processes inherit the parent's file positions.
+- Anyways, now we know what the i-node is. It contains the disk addresses of the first 12 blocks of the file (ext2). If the file position falls in the first 12 blocks, the block is read and the data is copied to the user. If not, a field in the i-node contains the disk address of a single indirect block. This block contains the disk addresses of more disk blocks. If a block is 1 KB, and a disk addr is 4 bytes, the single indirect block can hold 256 disk addresses. Beyond that, a double indirect block is used. 
+![alt text](static/image-26.png)
+
+### Ext4 File System
+To improve the robustness of the file system, Linux relies on journaling file systems. The basic idea behind this is to maintain a journal, which describes all file-ssytem operations in sequential order. By sequentially writing out changes to the file-system data or metadata, the operations do not suffer from the overheads of disk-head movement during random disk accesses. Eventually, the changes will be written out, committed, and the journal entries can be discarded. If a system crash or power failure occurs before the changes are committed, the system will detect that the file system wasnot unmounted properly, traverse the journal, and apply the file-system changes on restart.
+
+This journal is a file managed as a circular buffer. It may be stored on the same or a separate device from the main file system. JBD (journaling block device) is used to perform journal read/write operations. 
+
+Ext4 uses extents. They represent contiguous blocks of storage, for instance 128MB of contiguous 4KB blocks. This allows ext4 to reduce fragmentation for large files, and doesn't require i-node operations for each block of storage. 
+
+/proc File System:
+- /proc is the process file system. For every process in the system, a directory is created in /proc. The name of the dir is the PID. In there, there are files that appear to contain info about the process, such as its command line, env strings, and signal masks. These files don't actually exist on the disk. When they are read, the system retrieves that info from the actual process and returns it in a std format. There's also info about the CPU, disk partitions, devices, ...
+
+### NFS: The Network File System
+Basic idea behind NFS is to allow an arbitrary collection of clients and servers share a common file system. In many cases, all the clients and servers are on the same LAN, but this is not required. For simplicity, assume they're on the same LAN. 
+
+Each NFS server exports one or more of its directories for access by remote clients. The list of directories a server exports is maintained in a file, often /etc/exports, so that they can be automatically exported when the server is booted. Clients access exported dirs by mounting them. When a client mounts a remote directory, it becomes part of its directory hierarchy:
+![alt text](static/image-27.png)
+
+Diskless workstations often have only a skeleton file system in RAM and get all their files from remote servers like this. 
+
+Protocols: Since one of the goals of NFS is to support a system with clients and servers possibly running different OSs on different hardware, NFS defines 2 client-server protocols. 
+
+The first protocol handles mounting: A client sends a path name to a server and requests permission to mount that directory. If the path name is legal (dir exists and exposed on server), server returns a file handle to the client. That contains fields uniquely identifying the file-system type, the disk, the i-node number of the directory, and security info. Subsequent calls to read and write files in the mounted dir use the file handle.
+
+Linux usually support automounting, where it doesn't mount the dir until it's accessed. That ensures the client doesn't waste time handling errors while booting if the server is down. It also allows the client to send mount requests to multiple servers whenever it tries to access the resource, and the first server to respond is the one that gets mounted, this increases reliability and fault tolerance. In this setup, it's up to the user to ensure these file systems are replicated properly. So this is usually used only for binaries and files that barely change.
+
+The second NFS protocol is for directory and file accesses: Clients can send messages to servers to manipulate directories and read/write files. Most Linux system calls are supported by NFS, except open and close (this is intentional. It's not necessary to open a file before reading it, nor to close it when done. Instead, to read a file, a client sends the server a lookup message, which returns a file handle.) Unlike an open call, this lookup operation doesn't copy any info into internal system tables.
+This allows servers to be stateless, and it doesn't matter if they crash, they won't lose any information.
+
+The NFS method makes it difficult to achieve the exact Linux file semantics. For example, in Linux a file can be opened and locked. When the file is closed, the locks are released. In a stateless server such as NFS, locks cannot be associated with open files, because the server doesn't know if the file is open or closed. NFS therefore needs a separate, additional mechanism for file locking.
+
+NFS uses standard UNIX protection mechanism, with rwx bits for the owner, group and other. 
+
+NFS Implementation: 
+Most Linux systems use a 3-layer implementation. The top layer is the system-call layer (handles open, read, close). After parsing the call and checking the params, it invokes the second layer: Virtual File System layer, which maintains a table with one entry for each open file. VFS has vnode entry for every open file, which are used to tell whether the file is local or remote. 
+![alt text](static/image-28.png)
+
+When a remote file is opened on the client, at some point during the parsing of the path name, the kernel hits the dir on which the remote file system is mounted. It sees that this dir is remote and in the dir's vnode finds the pointer to the r-node. It then asks the NFS client code to open the file. The NFS client code looks up the remaining portion of the path name on the remote server, and gets back a file handle for it. It makes an e-node for the remote file in its tables and reports back to the VFS layer, which puts in its tables a v-node for the file that points to the r-node. 
+
+Transfers happen in 8KB chunks, for read and write, using the received file descriptor, and specified offset, and byte count.
+
+Caching is also used serverside to avoid disk accesses, but this is invisible to the client. Clients maintain 2 caches, one for inodes, and one for file data. When either an inode or a file block is needed, we check the cache first to avoid network traffic. This introduces issues... If 2 clients read from the same cache, but one of them modifies some data block, when the other reads it, they get the old stale data. NFS implementation does things to mitigate this: there's a cache block timer, and there's some other last-modified info that's used to check if the cache is still valid. It's not perfect, but makes the system usable in most cases.
+
+NFSv4: this was designed to simplfiy certain operations. NFSv4 is actually a stateful file system. This permits open operations to be invoked on remote files, since the remote NFS server maintains all file-system-related structures now, including the file pointer. Read operations then don't need to include absolute read ranges, but can be incrementally applied from the previous read position. This results in shorter messages, and also the ability to bundle multiple operations in one transaction. 
+
+## Security in Linux
