@@ -104,3 +104,11 @@ Here is a list of technologies and methodologies that major companies use to bui
     - Inefficient streaming for songs with high volume of requests: can easily overload song bucket. Takes alot of bandwidth for the web servers as well. Solution: CDNs as song audio caches. Relieves load on S3 and web servers.
     - Caching metadata: Use Redis to cache metadata. Relieves load on the RDS DB and ensures that popular requests are efficiently served.
     - Think about cache on the server level: Maybe a distributed cache, like Memcached, to cache song URLs and relieve load on the DBs. Maybe load entire songs on the web servers to avoid streaming from S3. (Multi-layer caching)
+
+# Design a botnet that can exploit 10000 low-end machines to run code. All machines need to crawl web pages and return results. No machine should crawl a page twice.
+
+# Design a system that stores and retrieves images for Facebook
+
+# How would you design a cache API?
+
+# How would you design a system that manipulates content sent from a client? (clean offensive words for ex)
