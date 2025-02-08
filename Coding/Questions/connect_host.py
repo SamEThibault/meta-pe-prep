@@ -24,9 +24,6 @@ def process_line(line):
     hostname, port = line.strip().split(", ")
     return check_port(hostname, port)
 
-
-
-
 def main():
     # we can do a parallel approach
     """
