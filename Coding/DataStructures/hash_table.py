@@ -1,5 +1,6 @@
 # Hash table with chaining
 
+
 class Node:
     def __init__(self, key, val, next=None):
         self.key = key
@@ -16,7 +17,7 @@ class HashTable:
     def __init__(self, capacity):
         self.store = [None] * capacity
         self.capacity = capacity
-    
+
     def insert(self, key, val):
         node = Node(key, val)
         curr = self.store[self._hash(key)]
@@ -33,11 +34,10 @@ class HashTable:
             curr = curr.next
         curr.next = node
         return
- 
 
     def delete(self, key):
         curr = self.store[self._hash(key)]
-        
+
         if curr is None:
             print("KEY does not exist")
             return
@@ -57,10 +57,9 @@ class HashTable:
                 return
             prev = curr
             curr = curr.next
-        
         print("KEY does not exist")
         return
-    
+
     def retrieve(self, key):
         curr = self.store[self._hash(key)]
 
@@ -72,13 +71,12 @@ class HashTable:
             if curr.key == key:
                 return curr.val
             curr = curr.next
-            
         print("KEY does not exist")
         return
 
     def _hash(self, key):
         return key % self.capacity
-    
+
     def display(self):
         for item in self.store:
             if item is None:
@@ -89,8 +87,6 @@ class HashTable:
                 print(f"{{{curr.key} : {curr.val}}}", end=" -> ")
                 curr = curr.next
             print()
-            
-
 
 
 hash_table = HashTable(3)
