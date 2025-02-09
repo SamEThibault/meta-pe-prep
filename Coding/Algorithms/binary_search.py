@@ -1,5 +1,5 @@
 # Binary Search:
-# Works on sorted arrays, go to the middle, check if its lower or higher than target, 
+# Works on sorted arrays, go to the middle, check if its lower or higher than target,
 # then split group in half and check the side that could contain the target, repeat
 
 # This is worst case O(logN)
@@ -16,11 +16,11 @@ def binary_search(arr, target, left, right):
         return binary_search(arr, target, mid + 1, right)
     else:
         return binary_search(arr, target, left, mid - 1)
-    
+
 
 # Iterative approach (this works to show the algorithm, but is bad practice, use left and right index trackers instead)
 def binary_search_iterative(arr, target):
-    
+
     subarr = arr.copy()
     while len(subarr) >= 1:
         mid_i = len(subarr) // 2
@@ -33,10 +33,24 @@ def binary_search_iterative(arr, target):
             subarr = subarr[mid_i:]
 
     return False
-        
+
+
+# Here's a better left and right indexed approach that's still iterative:
+def search(nums, target) -> int:
+    left, right = 0, len(nums) - 1
+
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+
+        if nums[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
 
 
 arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 # print(binary_search(arr, 5, 0, len(arr) - 1))
 print(binary_search_iterative(arr, 5))
-
