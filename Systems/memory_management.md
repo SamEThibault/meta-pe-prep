@@ -84,3 +84,32 @@ Basically, there will be a page fault, since there won't be a mapping in the TLB
 - Note that when the page is restored to RAM, it's not necessarily restored to the same physical frame where it originally was located
 - The MMU will use the same virtual address though, so the user space program will not know the difference.
 
+## General Process of Process Requesting Page
+
+    CPU checks the TLB (Translation Lookaside Buffer)
+        The TLB (a fast cache for page table entries) is searched to see if the virtual page number (VPN) has a matching entry.
+        If TLB hit → Use the frame number (PFN) + offset to get the physical address (fast path, no MMU involved!).
+        If TLB miss → Go to the next step.
+
+    MMU walks the page table (Page Table Lookup)
+        The MMU (Memory Management Unit) looks up the page table to find the mapping for the virtual page.
+        If the page is present in RAM → MMU updates the TLB, returns the physical address.
+        If the page is NOT present in RAM (page fault) → Go to step 3.
+
+    Page fault occurs → OS takes control
+        The OS detects a page fault and decides how to handle it:
+            If a free frame exists → Load the page from disk into the free frame (Step 4).
+            If no free frames → Use a page replacement algorithm (Step 5).
+
+    If free frame is available → Load the page
+        The requested page is read from disk (swap, file system, etc.) into an available RAM frame.
+        The page table is updated with the new frame number.
+        The TLB is updated with the new entry.
+        The CPU resumes execution.
+
+    If no free frames → Evict a page (Page Replacement)
+        The OS picks a victim page to evict using a page replacement algorithm (e.g., LRU, FIFO, Clock).
+        If the page is dirty (modified), it is written back to disk.
+        The new page is swapped into the now-free frame.
+        Page table and TLB are updated.
+        The process resumes execution
