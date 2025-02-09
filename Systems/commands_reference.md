@@ -146,3 +146,9 @@ Used to show virtual memory start, prints summary of key server statistics:
 - si, so: swap-ins and outs
 - Breakdowns of CPU time across all CPUs
 `vmstat 1`
+
+
+# LOGS
+There's a few key areas where useful files can point to some important information:
+- `/var/log/` has logs for loads of services if they have been configured
+- `/proc/<PID>/status` file contains the info that the task_struct of the process holds.
