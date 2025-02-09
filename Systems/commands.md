@@ -1,4 +1,4 @@
-# List of Important Linux Troubleshooting Commands
+# List of Important Linux Commands
 
 # NETWORKING
 ### `hostname`
@@ -66,6 +66,9 @@ Can also show TCP connection metrics: `sar -n TCP,ETCP 1`.
 (Uncomplicated Firewall), used to check and configure firewall rules.
 Check basics: `sudo ufw status verbose`
 
+### `iptables`
+Used to view current firewall rules: `iptables -L`
+
 # PROCESSES
 ### `ps`
 Used to monitor running processes. 
@@ -123,15 +126,12 @@ To record CPU cycles for entire system for 10sec: `perf record -a sleep 10`
 Used to show memory stats to analyze buffers and page cache: `free -m`
 
 # GENERAL
-### `journalctl`
-Used to view logs of various processes: `journalctl -u service.service`
-If you know the PID: `journalctl _PID=<PID>`
-
 ### `systemctl`
 Used to view/control services. (status, enable, disable, start, stop, restart, ...)
 To reload all system config files: `sudo systemctl daemon-reload`
 To power off: `sudo systemctl poweroff`
 To reboot: `sudo systemctl reboot`
+To view processes: `sudo systemctl list-unit-files`
 
 ### `ulimit`
 Used to find shell resource limits: `ulimit -a`
@@ -152,3 +152,9 @@ Used to show virtual memory start, prints summary of key server statistics:
 There's a few key areas where useful files can point to some important information:
 - `/var/log/` has logs for loads of services if they have been configured
 - `/proc/<PID>/status` file contains the info that the task_struct of the process holds.
+- `grep -i oom /var/log/messages` checks to see if any OOM faults occured.
+
+### `journalctl`
+Used to view logs of various processes: `journalctl -u service.service`
+If you know the PID: `journalctl _PID=<PID>`
+View errors: `journalctl -p err`
