@@ -8,10 +8,14 @@ def partial_reverse(array, start, end):
         return False
 
     # we're in range, let's do it
-    while start <= end:
-        temp = array[start]
-        array[start] = array[end]
-        array[end] = temp
+    while start < end:
+        # original approach:
+        # temp = array[start]
+        # array[start] = array[end]
+        # array[end] = temp
+
+        # pythonic swap:
+        array[start], array[end] = array[end], array[start]
         start += 1
         end -= 1
     return True
