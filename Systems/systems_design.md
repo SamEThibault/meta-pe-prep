@@ -62,6 +62,18 @@ Sharding:
 - We divide data across multiple nodes based on a shard key (user ID, for ex)
 - Horizontal Scaling: each node stores a subset of data
 
+Distributed Locks:
+- Sometimes, nodes need exclusive access to a resource that is shared across a range of servers
+- Distributed locks can be used to ensure exclusive access across the horizontal servers (can use Redis or Zookeeper for this)
+- A node would set a resource's value to "locked" while it's in use, then later it unlocks it
+
+Consistency:
+- Most of the time, data can be "eventually consistent", meaning there can be a period of time where some data is stale
+- Banking systems and such need strong consistency, which means you have to keep this in mind when caching stuff that other processes access
+
+Specialized Searches and Indexing:
+- Many database services allow multiple indexes for each object, ElasticSearch is usually used. 
+
 There's both local and global caching with distributed systems:
 - Local: Redis, on a single node
 - Global: CDNs like Cloudflare that service multiple nodes
@@ -72,6 +84,12 @@ Distributed System Architectures:
 - Master-Slave: A master node manages one or more slave nodes
 - Microservices: Application is dividedd into small, independently deployable services
 - Even-Driven: Components communicate by emitting and consuming events
+
+Communication Protocols:
+- REST: stateless, request-response, simple. Easy to scale horizontally with load balancer.
+- Long Polling: client makes a request to the server, server holds the request open until it has new data to send the client. Allows the use of load balancing, and easy firewall config (just like REST). But it allows clients to get real-time server updates without having to request it themselves (like REST).
+- Websockets: necessary if you need realtime, bidirectional communication between client and server. They can be challenging to add to design of architecture since you need to maintain the connection between client and server. This is a challenge when using load balancers, and it can be hard for a server to maintain many open connections. So, use message broker to handle the communication between the client and the server. This ensures you don't need to maintain long connections to every backend service. So: client -> load balancer -> websocker servers -> message broker -> backend services
+- There's also Server Sent Events (SSE), basically same as websockets but 1-way server->client communication. Connection remains open, and usually integrates easily to HTTP infra with load balancers and firewalls and such.
 
 Best Practices:
 - Assume nodes will fail, use retries, replication, and fallbacks
@@ -112,3 +130,5 @@ Here is a list of technologies and methodologies that major companies use to bui
 # How would you design a cache API?
 
 # How would you design a system that manipulates content sent from a client? (clean offensive words for ex)
+
+# Design YouTube
