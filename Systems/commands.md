@@ -147,6 +147,12 @@ Used to show virtual memory start, prints summary of key server statistics:
 - Breakdowns of CPU time across all CPUs
 `vmstat 1`
 
+### `lsmod`
+Used to list currently loaded modules
+
+### `modprobe`
+Used to load a module dynamically: `sudo modprobe wifi`, for example.
+
 
 # LOGS
 There's a few key areas where useful files can point to some important information:
