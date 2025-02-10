@@ -78,18 +78,31 @@ There's both local and global caching with distributed systems:
 - Local: Redis, on a single node
 - Global: CDNs like Cloudflare that service multiple nodes
 
+There's also distributed server caches (memcached, for example):
+- Stores key-value pairs in memory and scales horizontally across multiple nodes
+- No replication (for memcached)
+- Consistent hashing: keys are distributed across nodes
+- Basically, if the web server gets a cache miss for some resource a client requests, if gets it from the db, then it stores the db query result in their OWN memcached, memcached assigns the key to ONE node based on some modulo hashing value. This allows for client-side hashing, where the client's hash determines which node holds the data they want in their cache. So technically, not all nodes have the same cache here. Each node has their own cache with their own cached data, but the client can know which node to query to ensure they have their data already cached.
+
 Distributed System Architectures:
 - Client-Server: Clients request resources from a central server
 - Peer-to-Peer: Nodes are both clients and servers, sharing resources directly
 - Master-Slave: A master node manages one or more slave nodes
-- Microservices: Application is dividedd into small, independently deployable services
+- Microservices: Application is divided into small, independently deployable services
 - Even-Driven: Components communicate by emitting and consuming events
 
 Communication Protocols:
-- REST: stateless, request-response, simple. Easy to scale horizontally with load balancer.
-- Long Polling: client makes a request to the server, server holds the request open until it has new data to send the client. Allows the use of load balancing, and easy firewall config (just like REST). But it allows clients to get real-time server updates without having to request it themselves (like REST).
-- Websockets: necessary if you need realtime, bidirectional communication between client and server. They can be challenging to add to design of architecture since you need to maintain the connection between client and server. This is a challenge when using load balancers, and it can be hard for a server to maintain many open connections. So, use message broker to handle the communication between the client and the server. This ensures you don't need to maintain long connections to every backend service. So: client -> load balancer -> websocker servers -> message broker -> backend services
-- There's also Server Sent Events (SSE), basically same as websockets but 1-way server->client communication. Connection remains open, and usually integrates easily to HTTP infra with load balancers and firewalls and such.
+- ***REST***: stateless, request-response, simple. Easy to scale horizontally with load balancer.
+- ***Long Polling***: client makes a request to the server, server holds the request open until it has new data to send the client. Allows the use of load balancing, and easy firewall config (just like REST). But it allows clients to get real-time server updates without having to request it themselves (like REST).
+- ***Websockets***: necessary if you need realtime, bidirectional communication between client and server. They can be challenging to add to design of architecture since you need to maintain the connection between client and server. This is a challenge when using load balancers, and it can be hard for a server to maintain many open connections. So, use message broker to handle the communication between the client and the server. This ensures you don't need to maintain long connections to every backend service. So: client -> load balancer -> websocker servers -> message broker -> backend services
+- There's also ***Server Sent Events (SSE)***, basically same as websockets but 1-way server->client communication. Connection remains open, and usually integrates easily to HTTP infra with load balancers and firewalls and such.
+
+Message Queues:
+- Producers of messages put messages in a queue, and consumers fetch from that queue whenever they can
+
+Pub-Sub:
+- Messaging-oriented middlewarethat pushes a producer's newly published message based on a subscription of the consumer's preferences
+![alt text](static/image-31.png)
 
 Best Practices:
 - Assume nodes will fail, use retries, replication, and fallbacks
