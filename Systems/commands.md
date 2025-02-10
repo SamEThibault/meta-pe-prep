@@ -103,6 +103,9 @@ used to check directory size: `du -sh`
 ### `iostat`
 Used to get more I/O information: `iostat -xz 1` shows read/write loads, await times, avg number of requests, and device util
 
+### `stat`
+Used to show file i-node data: `stat file.sh`
+
 # CPU
 ### `uptime`
 Used to show load / demand averages (# processes wanting to run) in 1, 5, and 15min load averages.
@@ -151,7 +154,7 @@ Used to show virtual memory start, prints summary of key server statistics:
 Used to list currently loaded modules
 
 ### `modprobe`
-Used to load a module dynamically: `sudo modprobe wifi`, for example.
+Used to load a module dynamically: `sudo modprobe wifi`, for example. use -r to remove.
 
 
 # LOGS
