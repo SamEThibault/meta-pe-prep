@@ -73,7 +73,7 @@ Used to view current firewall rules: `iptables -L`
 ### `ps`
 Used to monitor running processes. 
 To show the most relevant info: `ps aux`
-For a specific process: `ps aux | grep <processName>
+For a specific process: `ps aux | grep <processName>`
 To find zombie processes: `ps aux | grep Z`
 
 ### `strace`
