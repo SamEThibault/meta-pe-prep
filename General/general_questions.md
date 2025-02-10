@@ -15,7 +15,7 @@ These questions test one's understanding of the Linux process lifecycle, system 
 - The `ps` binrary's entry point is executed
 - The `ps` program interacts with the `/proc` filesystem to get information about the running processes
 - It uses system calls like `open()`, `read()`, and `close()` to read the information from `/proc`
-- Each of these calls transition the process from user space to kernel space.
+- Each of these calls transition the process from user space to kernel space (mode switch).
 - Data requested by these system calls is retrieved from the kernel's internal process table, and formatted as a file-like structure under `/proc`. This is because `/proc` is a pseudo-filesystem: it doesn't store data on disk. Instead, files and dirs are generated on the fly by the kernel whenever they are accessed. It uses its internal process table to do this.
 - Data requested by `ps` is copied from kernel space to user space
 - Kernel returns control to the ps process after each system call
